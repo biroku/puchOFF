@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>puchOFF</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#111009" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="puchOFF" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
+  <style>
+    :root{--bg:#111009;--surface:#1c1a12;--border:#2e2b1f;--tobacco:#c8a553;--ash:#8a8070;--smoke:#d4cfc4;--white:#f0ece0;--green:#6b8f5e}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{background-color:var(--bg);color:var(--smoke);font-family:'Lora',Georgia,serif;min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:max(env(safe-area-inset-top),2rem) 1.25rem max(env(safe-area-inset-bottom),3rem);overflow-x:hidden}
+    body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.6}
+    .container{position:relative;z-index:1;width:100%;max-width:640px}
+    .lang-bar{display:flex;justify-content:flex-end;gap:.3rem;margin-bottom:1.5rem;animation:fadeDown .5s ease both}
+    .lang-btn{background:transparent;border:1px solid var(--border);color:var(--ash);font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.1em;padding:.3rem .65rem;border-radius:4px;cursor:pointer;transition:all .18s}
+    .lang-btn.active{border-color:var(--tobacco);color:var(--tobacco);background:rgba(200,165,83,.08)}
+    .lang-btn:hover:not(.active){border-color:var(--ash);color:var(--smoke)}
+    .header{text-align:center;margin-bottom:2.5rem;animation:fadeDown .7s ease both}
+    .app-name{font-family:'Playfair Display',serif;font-size:clamp(2.8rem,13vw,5rem);font-weight:900;color:var(--white);line-height:1;letter-spacing:-.02em;margin-bottom:.3rem}
+    .app-name span{color:var(--tobacco);font-style:italic}
+    .subtitle{font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ash)}
+    .panel{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem;margin-bottom:1.1rem}
+    .panel-label{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ash);margin-bottom:1rem;display:block}
+    .type-toggle{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:1.25rem}
+    .type-btn{background:var(--bg);border:1px solid var(--border);color:var(--ash);font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.08em;padding:.75rem .5rem;border-radius:6px;cursor:pointer;transition:all .18s;text-align:center}
+    .type-btn .icon{font-size:1.3rem;display:block;margin-bottom:.3rem}
+    .type-btn.active{border-color:var(--tobacco);color:var(--tobacco);background:rgba(200,165,83,.07)}
+    .field-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem}
+    .field{display:flex;flex-direction:column;gap:.35rem;margin-bottom:.75rem}
+    .field:last-child{margin-bottom:0}
+    .field label{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ash)}
+    .field input{background:var(--bg);border:1px solid var(--border);color:var(--white);font-family:'DM Mono',monospace;font-size:.9rem;padding:.65rem .8rem;border-radius:6px;outline:none;transition:border-color .18s;width:100%;-webkit-appearance:none}
+    .field input:focus{border-color:var(--tobacco)}
+    .field input[type="number"]::-webkit-inner-spin-button,.field input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none}
+    .field-hint{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--ash);font-style:italic;margin-top:-.3rem;margin-bottom:.4rem}
+    .weekly-calc{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--ash);padding:.65rem .8rem;background:var(--bg);border:1px dashed var(--border);border-radius:6px;margin-top:.25rem;text-align:center;transition:color .2s}
+    .weekly-calc.has-value{color:var(--tobacco);border-color:rgba(200,165,83,.3)}
+    input[type="datetime-local"]{background:var(--bg);border:1px solid var(--border);color:var(--white);font-family:'DM Mono',monospace;font-size:.85rem;padding:.7rem .9rem;border-radius:6px;width:100%;outline:none;transition:border-color .18s;-webkit-appearance:none}
+    input[type="datetime-local"]:focus{border-color:var(--tobacco)}
+    input[type="datetime-local"]::-webkit-calendar-picker-indicator{filter:invert(.6) sepia(1) saturate(.5);cursor:pointer}
+    .btn{background:var(--tobacco);color:var(--bg);border:none;font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;font-weight:500;padding:.8rem 1.4rem;border-radius:6px;cursor:pointer;transition:opacity .18s,transform .1s;white-space:nowrap}
+    .btn:hover{opacity:.85}.btn:active{transform:scale(.96)}.btn-full{width:100%}
+    .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--ash);font-size:.62rem;padding:.55rem 1rem}
+    .btn-ghost:hover{border-color:var(--ash);color:var(--smoke)}
+    .counter-block{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:2.25rem 1.5rem 2rem;margin-bottom:1.1rem;text-align:center;position:relative;overflow:hidden;animation:fadeUp .7s .1s ease both}
+    .counter-block::after{content:'🚬';position:absolute;font-size:7rem;opacity:.03;bottom:-1.5rem;right:-1rem;pointer-events:none}
+    .time-display{font-family:'DM Mono',monospace;font-size:clamp(3.5rem,18vw,6rem);font-weight:300;color:var(--white);line-height:1;margin-bottom:.3rem}
+    .time-sub{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ash);margin-bottom:1.75rem}
+    .time-breakdown{display:flex;justify-content:center;gap:1.2rem;flex-wrap:wrap}
+    .time-unit{text-align:center}
+    .time-unit .num{font-family:'DM Mono',monospace;font-size:1.5rem;color:var(--tobacco);display:block;line-height:1}
+    .time-unit .lbl{font-family:'DM Mono',monospace;font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ash);display:block;margin-top:.2rem}
+    .divider-dot{font-family:'DM Mono',monospace;color:var(--border);font-size:1.2rem;align-self:center}
+    .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.1rem;animation:fadeUp .7s .2s ease both}
+    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.2rem 1rem}
+    .stat-card .icon{font-size:1.3rem;margin-bottom:.4rem;display:block}
+    .stat-card .value{font-family:'DM Mono',monospace;font-size:1.7rem;color:var(--white);line-height:1;margin-bottom:.25rem}
+    .stat-card.green .value{color:var(--green)}
+    .stat-card .stat-label{font-family:'DM Mono',monospace;font-size:.56rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ash)}
+    .stat-card .note{font-size:.7rem;font-style:italic;color:var(--ash);margin-top:.3rem;line-height:1.4}
+    .milestone{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--tobacco);border-radius:8px;padding:1.25rem 1.5rem;margin-bottom:1.1rem;animation:fadeUp .7s .3s ease both}
+    .milestone-label{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ash);margin-bottom:.4rem}
+    .milestone-text{font-size:.93rem;line-height:1.65;color:var(--smoke)}
+    .next-milestone{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.25rem 1.5rem;margin-bottom:1.75rem;animation:fadeUp .7s .4s ease both}
+    .progress-label{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.6rem}
+    .progress-title{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ash)}
+    .progress-pct{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--tobacco)}
+    .progress-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:.5rem}
+    .progress-fill{height:100%;background:var(--tobacco);border-radius:2px;transition:width 1s ease}
+    .progress-sub{font-size:.73rem;font-style:italic;color:var(--ash)}
+    .settings-row{display:flex;justify-content:center;margin-bottom:2rem;animation:fadeUp .7s .5s ease both}
+    #installBanner{background:var(--surface);border:1px solid var(--tobacco);border-radius:8px;padding:.9rem 1.25rem;margin-bottom:1.1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+    #installBanner p{font-family:'DM Mono',monospace;font-size:.66rem;color:var(--smoke);letter-spacing:.04em}
+    .footer{text-align:center;animation:fadeUp .7s .6s ease both}
+    .footer p{font-size:.62rem;color:var(--border);font-family:'DM Mono',monospace}
+    @keyframes fadeDown{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+    .blinking{animation:pulse 1.5s ease infinite}
+    .hidden{display:none!important}
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="lang-bar">
+    <button class="lang-btn" id="btn-es" onclick="setLang('es')">ES</button>
+    <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+    <button class="lang-btn" id="btn-pt" onclick="setLang('pt')">PT</button>
+  </div>
+
+  <header class="header">
+    <div class="app-name">puch<span>OFF</span></div>
+    <p class="subtitle" id="txt-subtitle"></p>
+  </header>
+
+  <div id="installBanner" class="hidden">
+    <p id="txt-install-msg"></p>
+    <button class="btn" id="installBtn"></button>
+  </div>
+
+  <div id="setupSection">
+    <div class="panel" style="animation:fadeUp .7s .1s ease both">
+      <span class="panel-label" id="txt-what-smoked"></span>
+      <div class="type-toggle">
+        <button class="type-btn" id="btnCig" onclick="setType('cig')">
+          <span class="icon">🚬</span><span id="txt-cigarettes"></span>
+        </button>
+        <button class="type-btn" id="btnTob" onclick="setType('tob')">
+          <span class="icon">🌿</span><span id="txt-tobacco"></span>
+        </button>
+      </div>
+
+      <!-- CIGARRILLOS -->
+      <div id="formCig" class="hidden">
+        <div class="field-row">
+          <div class="field"><label id="lbl-cig-price"></label><input type="number" id="cigPrice" inputmode="decimal" oninput="calcWeekly()"/></div>
+          <div class="field"><label id="lbl-cig-per-pack"></label><input type="number" id="cigPerPack" inputmode="decimal" oninput="calcWeekly()"/></div>
+        </div>
+        <div class="field"><label id="lbl-cig-per-week"></label><input type="number" id="cigPerWeek" inputmode="decimal" oninput="calcWeekly()"/></div>
+      </div>
+
+      <!-- TABACO ARMADO -->
+      <div id="formTob" class="hidden">
+        <div class="field-row">
+          <div class="field"><label id="lbl-tob-price"></label><input type="number" id="tobPrice" inputmode="decimal" oninput="calcWeekly()"/></div>
+          <div class="field"><label id="lbl-tob-grams"></label><input type="number" id="tobGrams" inputmode="decimal" placeholder="ej: 40"/>
+            <span class="field-hint" id="lbl-tob-grams-hint"></span>
+          </div>
+        </div>
+        <div class="field"><label id="lbl-tob-per-week"></label><input type="number" id="tobPerWeek" inputmode="decimal" step="0.25" oninput="calcWeekly()"/></div>
+        <div class="field-row">
+          <div class="field"><label id="lbl-papers-price"></label><input type="number" id="papersPrice" inputmode="decimal" oninput="calcWeekly()"/></div>
+          <div class="field"><label id="lbl-papers-per-week"></label><input type="number" id="papersPerWeek" inputmode="decimal" step="0.5" oninput="calcWeekly()"/></div>
+        </div>
+        <div class="field"><label id="lbl-rolled-per-week"></label><input type="number" id="rolledPerWeek" inputmode="decimal" placeholder="ej: 25"/>
+          <span class="field-hint" id="lbl-rolled-hint"></span>
+        </div>
+      </div>
+
+      <div class="weekly-calc" id="weeklyCalc" style="margin-top:1rem"></div>
+    </div>
+
+    <div class="panel" style="animation:fadeUp .7s .2s ease both">
+      <span class="panel-label" id="txt-last-smoke"></span>
+      <input type="datetime-local" id="quitDate"/>
+    </div>
+
+    <div style="animation:fadeUp .7s .3s ease both;margin-bottom:1.1rem">
+      <button class="btn btn-full" id="btn-start" onclick="startTracking()"></button>
+    </div>
+  </div>
+
+  <div id="tracker" class="hidden">
+    <div class="counter-block">
+      <div class="time-display" id="daysDisplay">0</div>
+      <div class="time-sub" id="txt-days-smoke-free"></div>
+      <div class="time-breakdown">
+        <div class="time-unit"><span class="num" id="hoursDisplay">00</span><span class="lbl" id="txt-hours"></span></div>
+        <div class="divider-dot">·</div>
+        <div class="time-unit"><span class="num" id="minutesDisplay">00</span><span class="lbl" id="txt-min"></span></div>
+        <div class="divider-dot">·</div>
+        <div class="time-unit"><span class="num blinking" id="secondsDisplay">00</span><span class="lbl" id="txt-sec"></span></div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card green">
+        <span class="icon">💵</span>
+        <div class="value" id="savedDisplay">$0</div>
+        <div class="stat-label" id="txt-saved-label"></div>
+        <div class="note" id="savedNote">—</div>
+      </div>
+      <div class="stat-card">
+        <span class="icon" id="unitIcon">🚬</span>
+        <div class="value" id="unitsDisplay">0</div>
+        <div class="stat-label" id="unitsLabel"></div>
+        <div class="note" id="unitsNote">—</div>
+      </div>
+      <div class="stat-card">
+        <span class="icon">⏰</span>
+        <div class="value" id="lifeDisplay">0h</div>
+        <div class="stat-label" id="txt-life-label"></div>
+        <div class="note" id="txt-life-note"></div>
+      </div>
+      <div class="stat-card">
+        <span class="icon">🍕</span>
+        <div class="value" id="pizzaDisplay">0</div>
+        <div class="stat-label" id="txt-pizza-label"></div>
+        <div class="note" id="txt-pizza-note"></div>
+      </div>
+    </div>
+
+    <div class="milestone">
+      <div class="milestone-label" id="txt-milestone-label"></div>
+      <div class="milestone-text" id="milestoneText"></div>
+    </div>
+
+    <div class="next-milestone">
+      <div class="progress-label">
+        <span class="progress-title" id="nextLabel"></span>
+        <span class="progress-pct" id="progressPct">0%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      <div class="progress-sub" id="progressSub"></div>
+    </div>
+
+    <div class="settings-row">
+      <button class="btn btn-ghost" id="btn-edit" onclick="showSetup()"></button>
+    </div>
+  </div>
+
+  <footer class="footer"><p id="txt-footer"></p></footer>
+</div>
+
+<script>
+const T = {
+  es: {
+    subtitle:"días sin esa porquería",
+    installMsg:"Instalá puchOFF como app",installBtn:"Instalar",
+    whatSmoked:"¿Qué fumabas?",cigarettes:"cigarrillos",tobacco:"tabaco armado",
+    cigPrice:"Precio del atado ($)",cigPerPack:"Cigarrillos por atado",cigPerWeek:"¿Cuántos por semana?",
+    tobPrice:"Precio del paquete ($)",tobGrams:"Gramos del paquete",tobGramsHint:"Solo para referencia, no afecta el cálculo.",
+    tobPerWeek:"Paquetes por semana",
+    papersPrice:"Precio hojillas ($)",papersPerWeek:"Libritos por semana",
+    rolledPerWeek:"¿Cuántos armados por semana?",rolledHint:"Varía mucho según cómo los cargás. Calculá vos.",
+    weeklyEmpty:"completá los campos para ver el gasto semanal",
+    weeklyFmt:n=>`Gasto semanal estimado: $${n}`,
+    lastSmoke:"¿Cuándo fue el último pucho?",startBtn:"Arrancar el contador",
+    daysSF:"días sin fumar",hours:"horas",min:"min",sec:"seg",
+    savedLabel:"ahorrado",lifeLabel:"vida recuperada",lifeNote:"~11 min por cigarrillo.",
+    pizzaLabel:"pizzas posibles",pizzaNote:"Aprox. $350 la muzarella.",
+    packsNotBought:t=>t==='tob'?"paquetes no comprados":"atados no comprados",
+    packsNote:t=>t==='tob'?"de tabaco.":"de cigarrillos.",
+    milestoneLabel:"📍 Momento actual",
+    nextMilestone:d=>`Próximo hito: ${d} días`,
+    daysLeft:(n,d)=>n<=0?"¡Hito alcanzado! Ya sos leyenda.":`Faltan ${n} día${n!==1?'s':''} para el hito de ${d} días.`,
+    editBtn:"✏️ Editar configuración",
+    footer:"hecho para acordarme de lo fácil que era tirar plata en humo",
+    futureDate:"La fecha es en el futuro. Ojo con el optimismo.",
+    alertType:"Elegí si fumabas cigarrillos o tabaco.",
+    alertData:"Completá los datos de lo que fumabas.",
+    alertDate:"Ponele la fecha del último pucho.",
+    startMsg:"Arrancar es la parte más difícil. Y ya arrancaste. Eso cuenta.",
+    milestones:[
+      {days:1,msg:"Un día. Momento, ¿estás bien? ¿Querés hablar de eso?"},
+      {days:3,msg:"72 horas. La nicotina ya salió de tu sangre. Seguís oliendo raro pero ahora es tu olor."},
+      {days:7,msg:"Una semana. Con lo que ahorraste te comprás unas facturas. Pequeña victoria, gran sabor."},
+      {days:14,msg:"Dos semanas. El cuerpo ya respira mejor. Aunque todavía no lo notes porque subís la escalera igual de mal."},
+      {days:21,msg:"21 días. Dicen que los hábitos se forman acá. Spoiler: depende del hábito."},
+      {days:30,msg:"Un mes. Los pulmones están en modo 'mirá lo que podemos hacer'. Todavía no hacen nada, pero están entusiasmados."},
+      {days:60,msg:"Dos meses. Ya sos estadísticamente menos probable que vuelvas a empezar. La estadística no sabe nada de vos, pero bueno."},
+      {days:90,msg:"Tres meses. La circulación mejoró bastante. Podés correr al colectivo con un poco menos de vergüenza."},
+      {days:180,msg:"Seis meses. Mitad de año sin fumar. Básicamente un atleta de barrio en potencia."},
+      {days:365,msg:"¡Un año! Armá un asado con la guita ahorrada. Te lo ganaste con creces."},
+      {days:730,msg:"Dos años. Ya ni te acordás del olor. O sí te acordás y te da asco. Felicitaciones, sos libre."},
+    ]
+  },
+  en: {
+    subtitle:"days without that crap",
+    installMsg:"Install puchOFF as an app",installBtn:"Install",
+    whatSmoked:"What did you smoke?",cigarettes:"cigarettes",tobacco:"roll-your-own",
+    cigPrice:"Pack price ($)",cigPerPack:"Cigarettes per pack",cigPerWeek:"How many per week?",
+    tobPrice:"Pouch price ($)",tobGrams:"Grams per pouch",tobGramsHint:"Just for reference, doesn't affect the calculation.",
+    tobPerWeek:"Pouches per week",
+    papersPrice:"Rolling papers price ($)",papersPerWeek:"Booklets per week",
+    rolledPerWeek:"How many rollies per week?",rolledHint:"Depends how fat you roll them. You know better than anyone.",
+    weeklyEmpty:"fill in the fields to see your weekly spend",
+    weeklyFmt:n=>`Estimated weekly spend: $${n}`,
+    lastSmoke:"When was your last cigarette?",startBtn:"Start the counter",
+    daysSF:"smoke-free days",hours:"hours",min:"min",sec:"sec",
+    savedLabel:"saved",lifeLabel:"life regained",lifeNote:"~11 min per cigarette.",
+    pizzaLabel:"pizzas you could buy",pizzaNote:"Approx. $10 a pizza.",
+    packsNotBought:t=>t==='tob'?"pouches not bought":"packs not bought",
+    packsNote:t=>t==='tob'?"of tobacco.":"of cigarettes.",
+    milestoneLabel:"📍 Right now",
+    nextMilestone:d=>`Next milestone: ${d} days`,
+    daysLeft:(n,d)=>n<=0?"Milestone reached! You're an absolute legend.":`${n} day${n!==1?'s':''} left until the ${d}-day milestone.`,
+    editBtn:"✏️ Edit settings",
+    footer:"built to remember how easy it was to burn money",
+    futureDate:"That date is in the future. Slow down there.",
+    alertType:"Choose whether you smoked cigarettes or tobacco.",
+    alertData:"Fill in your smoking details.",
+    alertDate:"Set the date of your last cigarette.",
+    startMsg:"Starting is the hardest part. And you already did. That's not nothing.",
+    milestones:[
+      {days:1,msg:"One day. You doing okay? Want to talk about it?"},
+      {days:3,msg:"72 hours. Nicotine is out of your bloodstream. You still smell a bit off, but that's just you now."},
+      {days:7,msg:"One week. With what you saved you could grab a decent lunch. Small win, but a win."},
+      {days:14,msg:"Two weeks. Your body is quietly breathing better. Even if you still huff walking up stairs."},
+      {days:21,msg:"21 days. They say habits form here. Sometimes they're right. Sometimes they're selling a book."},
+      {days:30,msg:"One month. Your lungs are in 'watch what we can do' mode. They haven't done anything yet, but the mood is good."},
+      {days:60,msg:"Two months. Statistically less likely to relapse. Statistics don't know you personally, but still."},
+      {days:90,msg:"Three months. Circulation is noticeably better. Running for the bus is still embarrassing, just less so."},
+      {days:180,msg:"Six months. Half a year smoke-free. You're basically a wellness influencer without the content."},
+      {days:365,msg:"One year! Do something nice with the money you saved. You actually earned this one."},
+      {days:730,msg:"Two years. You don't even remember the smell anymore. Or you do and it disgusts you. Either way: you're free."},
+    ]
+  },
+  pt: {
+    subtitle:"dias sem essa merda",
+    installMsg:"Instale o puchOFF como app",installBtn:"Instalar",
+    whatSmoked:"O que você fumava?",cigarettes:"cigarros",tobacco:"tabaco de enrolar",
+    cigPrice:"Preço do maço (R$)",cigPerPack:"Cigarros por maço",cigPerWeek:"Quantos por semana?",
+    tobPrice:"Preço do pacote (R$)",tobGrams:"Gramas por pacote",tobGramsHint:"Só pra referência, não afeta o cálculo.",
+    tobPerWeek:"Pacotes por semana",
+    papersPrice:"Preço do seda (R$)",papersPerWeek:"Cadernos por semana",
+    rolledPerWeek:"Quantos enrolados por semana?",rolledHint:"Depende de como você enrola. Você sabe melhor que ninguém.",
+    weeklyEmpty:"preencha os campos para ver o gasto semanal",
+    weeklyFmt:n=>`Gasto semanal estimado: R$${n}`,
+    lastSmoke:"Quando foi o último cigarro?",startBtn:"Iniciar o contador",
+    daysSF:"dias sem fumar",hours:"horas",min:"min",sec:"seg",
+    savedLabel:"economizado",lifeLabel:"vida recuperada",lifeNote:"~11 min por cigarro.",
+    pizzaLabel:"pizzas que dá pra pedir",pizzaNote:"Aprox. R$35 a pizza.",
+    packsNotBought:t=>t==='tob'?"pacotes não comprados":"maços não comprados",
+    packsNote:t=>t==='tob'?"de tabaco.":"de cigarros.",
+    milestoneLabel:"📍 Agora mesmo",
+    nextMilestone:d=>`Próxima marca: ${d} dias`,
+    daysLeft:(n,d)=>n<=0?"Marco alcançado! Você é uma lenda.":`Faltam ${n} dia${n!==1?'s':''} para a marca de ${d} dias.`,
+    editBtn:"✏️ Editar configurações",
+    footer:"feito pra lembrar como era fácil jogar dinheiro fora",
+    futureDate:"Essa data é no futuro. Segura a ansiedade aí.",
+    alertType:"Escolha se fumava cigarros ou tabaco.",
+    alertData:"Preencha os dados do que você fumava.",
+    alertDate:"Coloca a data do último cigarro.",
+    startMsg:"Começar é a parte mais difícil. E você já começou. Isso conta e muito.",
+    milestones:[
+      {days:1,msg:"Um dia. Tá bem? Quer conversar sobre isso?"},
+      {days:3,msg:"72 horas. A nicotina já saiu do sangue. Você ainda cheira meio estranho, mas agora é seu cheiro."},
+      {days:7,msg:"Uma semana. Com o que economizou dá pra pedir uma pizza. Pequena vitória, gosto grande."},
+      {days:14,msg:"Duas semanas. O corpo já respira melhor. Mesmo que você ainda ofegue subindo escada."},
+      {days:21,msg:"21 dias. Dizem que hábitos se formam aqui. Às vezes é verdade. Às vezes estão vendendo curso."},
+      {days:30,msg:"Um mês. Seus pulmões estão em modo 'olha o que a gente consegue fazer'. Ainda não fizeram nada, mas o ânimo tá bom."},
+      {days:60,msg:"Dois meses. Estatisticamente menos chance de voltar a fumar. A estatística não te conhece, mas tudo bem."},
+      {days:90,msg:"Três meses. Circulação bem melhor. Correr pro ônibus ainda é constrangedor, só um pouco menos."},
+      {days:180,msg:"Seis meses. Metade do ano sem fumar. Basicamente um atleta de bairro em potencial."},
+      {days:365,msg:"Um ano! Faz alguma coisa boa com a grana economizada. Você merece mesmo."},
+      {days:730,msg:"Dois anos. Nem lembra mais do cheiro. Ou lembra e dá nojo. De qualquer forma: você é livre."},
+    ]
+  }
+};
+
+const STORAGE_KEY='puchoff_v3';
+const PIZZA={es:350,en:10,pt:35};
+const MINS_PER_CIG=11;
+const ALL_M=[1,3,7,14,21,30,60,90,180,365,730,1000];
+let lang='es',currentType=null,intervalId=null;
+
+const pad=n=>String(Math.floor(n)).padStart(2,'0');
+const fmtNum=n=>Math.floor(n).toLocaleString();
+
+function setLang(l){
+  lang=l;
+  localStorage.setItem('puchoff_lang',l);
+  document.documentElement.lang=l;
+  ['es','en','pt'].forEach(x=>document.getElementById('btn-'+x).classList.toggle('active',x===l));
+  applyT();
+}
+
+function applyT(){
+  const t=T[lang];
+  const ids={
+    'txt-subtitle':t.subtitle,'txt-install-msg':t.installMsg,'installBtn':t.installBtn,
+    'txt-what-smoked':t.whatSmoked,'txt-cigarettes':t.cigarettes,'txt-tobacco':t.tobacco,
+    'lbl-cig-price':t.cigPrice,'lbl-cig-per-pack':t.cigPerPack,'lbl-cig-per-week':t.cigPerWeek,
+    'lbl-tob-price':t.tobPrice,'lbl-tob-grams':t.tobGrams,'lbl-tob-grams-hint':t.tobGramsHint,
+    'lbl-tob-per-week':t.tobPerWeek,
+    'lbl-papers-price':t.papersPrice,'lbl-papers-per-week':t.papersPerWeek,
+    'lbl-rolled-per-week':t.rolledPerWeek,'lbl-rolled-hint':t.rolledHint,
+    'txt-last-smoke':t.lastSmoke,'btn-start':t.startBtn,
+    'txt-days-smoke-free':t.daysSF,'txt-hours':t.hours,'txt-min':t.min,'txt-sec':t.sec,
+    'txt-saved-label':t.savedLabel,'txt-life-label':t.lifeLabel,'txt-life-note':t.lifeNote,
+    'txt-pizza-label':t.pizzaLabel,'txt-pizza-note':t.pizzaNote,
+    'txt-milestone-label':t.milestoneLabel,'btn-edit':t.editBtn,'txt-footer':t.footer
+  };
+  Object.entries(ids).forEach(([id,val])=>{const el=document.getElementById(id);if(el)el.textContent=val;});
+  calcWeekly();
+  if(currentType){
+    document.getElementById('unitsLabel').textContent=t.packsNotBought(currentType);
+    document.getElementById('unitsNote').textContent=t.packsNote(currentType);
+  }
+}
+
+function setType(tp){
+  currentType=tp;
+  document.getElementById('btnCig').classList.toggle('active',tp==='cig');
+  document.getElementById('btnTob').classList.toggle('active',tp==='tob');
+  document.getElementById('formCig').classList.toggle('hidden',tp!=='cig');
+  document.getElementById('formTob').classList.toggle('hidden',tp!=='tob');
+  calcWeekly();
+}
+
+function getWeeklyCost(){
+  if(currentType==='cig'){
+    const price=parseFloat(document.getElementById('cigPrice').value)||0;
+    const pw=parseFloat(document.getElementById('cigPerWeek').value)||0;
+    const pp=parseFloat(document.getElementById('cigPerPack').value)||1;
+    if(!price||!pw)return null;
+    return(pw/pp)*price;
+  }
+  if(currentType==='tob'){
+    const tp=parseFloat(document.getElementById('tobPrice').value)||0;
+    const tw=parseFloat(document.getElementById('tobPerWeek').value)||0;
+    const pp=parseFloat(document.getElementById('papersPrice').value)||0;
+    const pw=parseFloat(document.getElementById('papersPerWeek').value)||0;
+    if(!tp&&!tw)return null;
+    return tw*tp+pw*pp;
+  }
+  return null;
+}
+
+function getCigsPerWeek(){
+  if(currentType==='cig')return parseFloat(document.getElementById('cigPerWeek').value)||0;
+  // tabaco: usuario ingresa directamente cuántos armados por semana
+  return parseFloat(document.getElementById('rolledPerWeek').value)||0;
+}
+
+function calcWeekly(){
+  const cost=getWeeklyCost();
+  const el=document.getElementById('weeklyCalc');
+  const t=T[lang];
+  if(cost!==null&&cost>0){el.textContent=t.weeklyFmt(fmtNum(cost));el.classList.add('has-value');}
+  else{el.textContent=t.weeklyEmpty;el.classList.remove('has-value');}
+}
+
+function startTracking(){
+  const t=T[lang];
+  if(!currentType){alert(t.alertType);return;}
+  const cost=getWeeklyCost();
+  if(!cost){alert(t.alertData);return;}
+  const dv=document.getElementById('quitDate').value;
+  if(!dv){alert(t.alertDate);return;}
+  const cfg={ts:new Date(dv).getTime(),type:currentType,weeklyCost:cost,cigsPerWeek:getCigsPerWeek(),lang};
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(cfg));
+  launchTracker(cfg);
+}
+
+function launchTracker(cfg){
+  document.getElementById('setupSection').classList.add('hidden');
+  document.getElementById('tracker').classList.remove('hidden');
+  const t=T[lang];
+  document.getElementById('unitIcon').textContent=cfg.type==='tob'?'🌿':'🚬';
+  document.getElementById('unitsLabel').textContent=t.packsNotBought(cfg.type);
+  document.getElementById('unitsNote').textContent=t.packsNote(cfg.type);
+  const wc=cfg.weeklyCost||0;
+  document.getElementById('savedNote').textContent=t.weeklyFmt(fmtNum(wc));
+  if(intervalId)clearInterval(intervalId);
+  update(cfg);
+  intervalId=setInterval(()=>update(cfg),1000);
+}
+
+function update(cfg){
+  const t=T[lang];
+  const diff=Date.now()-cfg.ts;
+  if(diff<0){document.getElementById('milestoneText').textContent=t.futureDate;return;}
+  const ts=diff/1000,tm=ts/60,th=tm/60,td=th/24,fd=Math.floor(td);
+  document.getElementById('daysDisplay').textContent=fd;
+  document.getElementById('hoursDisplay').textContent=pad(th%24);
+  document.getElementById('minutesDisplay').textContent=pad(tm%60);
+  document.getElementById('secondsDisplay').textContent=pad(ts%60);
+  const wc=cfg.weeklyCost||0;
+  const saved=(td/7)*wc;
+  const pp=PIZZA[lang]||350;
+  document.getElementById('savedDisplay').textContent='$'+fmtNum(saved);
+  document.getElementById('unitsDisplay').textContent=(td/7).toFixed(1);
+  const cpw=cfg.cigsPerWeek||0;
+  const hrs=cpw>0?((td/7)*cpw*MINS_PER_CIG)/60:0;
+  document.getElementById('lifeDisplay').textContent=cpw===0?'—':hrs>=1?hrs.toFixed(1)+'h':Math.round(hrs*60)+'m';
+  document.getElementById('pizzaDisplay').textContent=Math.floor(saved/pp);
+  let msg=t.startMsg;
+  for(const m of t.milestones){if(fd>=m.days)msg=m.msg;}
+  document.getElementById('milestoneText').textContent=msg;
+  const nd=ALL_M.find(d=>d>fd)||ALL_M.at(-1);
+  const pd=[...ALL_M].reverse().find(d=>d<=fd)||0;
+  const pct=Math.min(((fd-pd)/(nd-pd))*100,100);
+  document.getElementById('nextLabel').textContent=t.nextMilestone(nd);
+  document.getElementById('progressPct').textContent=Math.round(pct)+'%';
+  document.getElementById('progressFill').style.width=pct+'%';
+  document.getElementById('progressSub').textContent=t.daysLeft(nd-fd,nd);
+}
+
+function showSetup(){
+  if(intervalId)clearInterval(intervalId);
+  document.getElementById('tracker').classList.add('hidden');
+  document.getElementById('setupSection').classList.remove('hidden');
+}
+
+function prefillSetup(cfg){
+  if(cfg.type)setType(cfg.type);
+  const d=new Date(cfg.ts);
+  document.getElementById('quitDate').value=new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
+}
+
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;document.getElementById('installBanner').classList.remove('hidden');});
+document.getElementById('installBtn')?.addEventListener('click',async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();const{outcome}=await deferredPrompt.userChoice;deferredPrompt=null;if(outcome==='accepted')document.getElementById('installBanner').classList.add('hidden');});
+window.addEventListener('appinstalled',()=>document.getElementById('installBanner').classList.add('hidden'));
+
+window.addEventListener('DOMContentLoaded',()=>{
+  const saved=localStorage.getItem('puchoff_lang');
+  const bl=navigator.language?.slice(0,2)||'es';
+  setLang(saved||(['es','en','pt'].includes(bl)?bl:'es'));
+  const raw=localStorage.getItem(STORAGE_KEY);
+  if(raw){try{const cfg=JSON.parse(raw);prefillSetup(cfg);launchTracker(cfg);}catch{localStorage.removeItem(STORAGE_KEY);}}
+});
+
+if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));
+</script>
+<script data-goatcounter="https://puchoff.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
